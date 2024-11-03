@@ -169,13 +169,20 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 			goto check;
 
 		case KVM_EXIT_IO:
-			if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_OUT
-			    && vcpu->kvm_run->io.port == 0xE9) {
-				char *p = (char *)vcpu->kvm_run;
-				fwrite(p + vcpu->kvm_run->io.data_offset,
-				       vcpu->kvm_run->io.size, 1, stdout);
-				fflush(stdout);
-				continue;
+			if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_OUT) {
+				if (vcpu->kvm_run->io.port == 0xE9) {
+					char *p = (char *)vcpu->kvm_run;
+					fwrite(p + vcpu->kvm_run->io.data_offset,
+					       vcpu->kvm_run->io.size, 1, stdout);
+					fflush(stdout);
+					continue;
+				} else if (vcpu->kvm_run->io.port == 0xEA) {
+					char *p = (char *)vcpu->kvm_run;
+					uint32_t val = *(uint32_t *)(p + vcpu->kvm_run->io.data_offset);
+					printf("Guest output: 0x%x (%u)\n", val, val);
+					fflush(stdout);
+					continue;
+				}
 			}
 
 			/* fall through */
