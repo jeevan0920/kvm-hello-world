@@ -64,6 +64,7 @@
 #define PDE64_G (1U << 8)
 
 #define PORT_GET_EXITS 0xEB    // New port for getting exit count
+#define PORT_DISPLAY_STR 0xEC   // New port for displaying string
 
 struct vm {
 	int sys_fd;
@@ -175,7 +176,16 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 		case KVM_EXIT_IO:
 			exit_count++;  // Count the exit
 			if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_OUT) {
-				if (vcpu->kvm_run->io.port == 0xE9) {
+				if (vcpu->kvm_run->io.port == PORT_DISPLAY_STR) {
+					char *p = (char *)vcpu->kvm_run;
+					uint32_t str_addr = *(uint32_t *)(p + vcpu->kvm_run->io.data_offset);
+					
+					// Access guest memory and print the string
+					const char *guest_str = vm->mem + str_addr;
+					printf("%s", guest_str);
+					fflush(stdout);
+					continue;
+				} else if (vcpu->kvm_run->io.port == 0xE9) {
 					char *p = (char *)vcpu->kvm_run;
 					fwrite(p + vcpu->kvm_run->io.data_offset,
 					       vcpu->kvm_run->io.size, 1, stdout);
