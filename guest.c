@@ -27,8 +27,7 @@ _start(void) {
 	printVal(42);
 	printVal(0xDEADBEEF);
 
-	// Use volatile to prevent optimization of memory access
-	*(volatile long *)(uintptr_t)0x400 = 42;
+	*(long *) 0x400 = 42;
 
 	for (;;)
 		asm("hlt" : /* empty */ : "a" (42) : "memory");
