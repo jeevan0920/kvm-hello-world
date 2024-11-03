@@ -63,12 +63,15 @@
 #define PDE64_PS (1U << 7)
 #define PDE64_G (1U << 8)
 
+#define PORT_GET_EXITS 0xEB    // New port for getting exit count
 
 struct vm {
 	int sys_fd;
 	int fd;
 	char *mem;
 };
+
+static uint32_t exit_count = 0;  // Counter for VM exits
 
 void vm_init(struct vm *vm, size_t mem_size)
 {
@@ -166,9 +169,11 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 
 		switch (vcpu->kvm_run->exit_reason) {
 		case KVM_EXIT_HLT:
+			exit_count++;  // Count the exit
 			goto check;
 
 		case KVM_EXIT_IO:
+			exit_count++;  // Count the exit
 			if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_OUT) {
 				if (vcpu->kvm_run->io.port == 0xE9) {
 					char *p = (char *)vcpu->kvm_run;
@@ -181,6 +186,12 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 					uint32_t val = *(uint32_t *)(p + vcpu->kvm_run->io.data_offset);
 					printf("Guest output: 0x%x (%u)\n", val, val);
 					fflush(stdout);
+					continue;
+				}
+			} else if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_IN) {
+				if (vcpu->kvm_run->io.port == PORT_GET_EXITS) {
+					char *p = (char *)vcpu->kvm_run;
+					*(uint32_t *)(p + vcpu->kvm_run->io.data_offset) = exit_count;
 					continue;
 				}
 			}
