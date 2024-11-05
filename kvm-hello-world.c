@@ -65,6 +65,7 @@
 
 #define PORT_GET_EXITS 0xEB    // New port for getting exit count
 #define PORT_DISPLAY_STR 0xEC   // New port for displaying string
+#define PORT_WRITE_FILE 0xED    // New port for writing to a file
 
 struct vm {
 	int sys_fd;
@@ -196,6 +197,23 @@ int run_vm(struct vm *vm, struct vcpu *vcpu, size_t sz)
 					uint32_t val = *(uint32_t *)(p + vcpu->kvm_run->io.data_offset);
 					printf("Guest output: 0x%x (%u)\n", val, val);
 					fflush(stdout);
+					continue;
+				} else if (vcpu->kvm_run->io.port == PORT_WRITE_FILE) {
+					char *p = (char *)vcpu->kvm_run;
+					uint32_t data_addr = *(uint32_t *)(p + vcpu->kvm_run->io.data_offset);
+					uint32_t length = *(uint32_t *)(p + vcpu->kvm_run->io.data_offset + sizeof(uint32_t));
+					
+					// Access guest memory to get the data
+					const char *data = vm->mem + data_addr;
+
+					// Open the file and write the data
+					FILE *file = fopen("output.txt", "w");
+					if (file) {
+						fwrite(data, 1, length, file);
+						fclose(file);
+					} else {
+						perror("Failed to open file");
+					}
 					continue;
 				}
 			} else if (vcpu->kvm_run->io.direction == KVM_EXIT_IO_IN) {

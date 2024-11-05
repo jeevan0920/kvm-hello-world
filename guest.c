@@ -6,6 +6,7 @@
 #define PORT_PRINT_VAL  0xEA    // New port for printing 32-bit values
 #define PORT_GET_EXITS  0xEB    // New port for getting exit count
 #define PORT_DISPLAY_STR 0xEC   // New port for displaying string
+#define PORT_WRITE_FILE 0xED  // New port for writing to a file
 
 static void outb(uint16_t port, uint32_t value) {
 	asm("out %0,%1" : /* empty */ : "a" (value), "Nd" (port) : "memory");
@@ -28,6 +29,12 @@ static uint32_t getNumExits(void) {
 static void display(const char *str) {
 	// Pass the address of the string buffer to hypervisor
 	outb(PORT_DISPLAY_STR, (uintptr_t)str);
+}
+
+static void writeFile(const char *data, size_t length) {
+	// Pass the address of the data buffer and its length to the hypervisor
+	outb(PORT_WRITE_FILE, (uintptr_t)data);
+	outb(PORT_WRITE_FILE, length);
 }
 
 void
