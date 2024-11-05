@@ -56,7 +56,15 @@ _start(void) {
 	printVal(exits_before);
 	printVal(exits_after);
 	
-	*(volatile long *)0x400 = 42;
+	// Example data to write
+	const char *data = "This is a test string.";
+	
+	// Call the writeFile function to send data to the hypervisor
+	writeFile(data, strlen(data));
+
+	// Exit the program (you might need to implement your own exit function)
+	// For example, using a hypercall to signal the end of execution
+	// exit(0); // Uncomment if you have an exit function
 
 	for (;;)
 		asm("hlt" : /* empty */ : "a" (42) : "memory");
