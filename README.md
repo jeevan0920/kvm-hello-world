@@ -7,6 +7,7 @@ Intel processors with the VMX hardware virtualization extensions.  It
 *might* work on AMD processors with AMD-V, but that hasn't been
 tested.
 
+
 ## Background
 
 [KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine) is

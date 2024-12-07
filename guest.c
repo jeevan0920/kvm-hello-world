@@ -43,6 +43,7 @@ __attribute__((section(".start")))
 _start(void) {
 	const char *p = "Hello, world!\n";
 	
+	
 	// Get initial exit count
 	uint32_t exits_before = getNumExits();
 	
